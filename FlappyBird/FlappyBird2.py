@@ -78,14 +78,11 @@ class Bird:
         return not self.collision
 
     def jump(self, dt: float, pipe: Pipe):
-        px, py, _, _ = pipe.getInfo()
-        inputs = np.array([[px - self.x, py - self.y]])
+        px, py, pgap, _ = pipe.getInfo()
+        inputs = np.array([[px - self.x, py + pgap/2 - self.y]])
         logits = self.NN.forward(inputs)
 
-        if logits[0][0] > 0.5: 
-            self.y -= Bird.JUMP*dt * logits[0][0]
-        if logits[0][1] > 0.5:
-            self.y += Bird.JUMP*dt * logits[0][1]
+        self.y += Bird.JUMP*dt * logits[0][1] - Bird.JUMP*dt * logits[0][0]
 
     def render(self):
         Simulation.WINDOW.blit(self.img, (self.x-self.r, self.y-self.r))
