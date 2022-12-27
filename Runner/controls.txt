@@ -1,0 +1,7 @@
+-- Controls -- 
+TAB    - Pause
+RETURN - Goto next Gen
+ESCAPE - Quit
+ -->   - Add 10s to Timer
+
+WASD   - when in agent control mode
