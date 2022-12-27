@@ -2,7 +2,8 @@ import pygame
 import pickle
 import numpy as np
 from math import radians, sin, cos
-from utils import MapInfo, line_circle, closest_dist, get_z_value
+from random import randint
+from utils import MapInfo, line_circle, closest_dist
 from networks import Network, NumpyNetwork
 from time import time
 from typing import Tuple, List
@@ -129,7 +130,7 @@ class Simulation:
 
     def __init__(self, map_name: str) -> None:
         Simulation.WINDOW = pygame.display.set_mode((Simulation.FRAMEWIDTH, Simulation.FRAMEHEIGHT))
-        pygame.display.set_title("Runner")
+        pygame.display.set_caption("Runner")
 
         self.map_info, raw_map_img = self.load_map(f"maps/{map_name}")
         self.map_info.scale(Simulation.MAP_SCALE)
@@ -144,8 +145,6 @@ class Simulation:
         self.generation = 1
         self.timer = Simulation.INIT_TIME
         self.pause = False
-
-        self.mut_z = get_z_value(Simulation.MUT_RATE)
 
     def evolve(self):
         """ The genetic algorithm resides here
@@ -174,12 +173,16 @@ class Simulation:
 
     def combine_matrix(self, a: np.ndarray, b: np.ndarray) -> np.ndarray:
         """ The best way to combine two matrices to facilitate evolution is up to debate
-            I have chosen the simple c = a/2 + b/2
+            A random point is selected, partitioning the matrices so that c = a[:i] + b[i:]
             Mutations are applied element-wise on the weights of the Neural Network
         """
-        c = a / 2 + b / 2
-        muts = np.random.randn(*a.shape)
-        mask = abs(muts) > self.mut_z  ## mut_z is calculated with the inv_cdf of 1-MUT_RATE for N(mu=0, sigma=1)
+        idx = randint(0, a.size)
+        c = np.zeros((a.size, ))
+        c[:idx] = a.reshape((a.size, ))[:idx]
+        c[idx:] = b.reshape((b.size, ))[idx:]
+        c = c.reshape(a.shape)
+        
+        mask = np.random.rand(*a.shape) < Simulation.MUT_RATE
         return c * ~mask +  c * mask * np.random.randn(*a.shape)
         #return c * ~mask + np.random.randn(*a.shape) * mask
 
